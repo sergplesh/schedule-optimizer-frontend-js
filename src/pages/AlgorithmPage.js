@@ -5,15 +5,10 @@ import {
   Typography, 
   CircularProgress, 
   Alert, 
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow
+  Paper
 } from '@mui/material';
 import AlgorithmForm from '../components/AlgorithmForm/AlgorithmForm';
+import GanttChart from '../components/GanttChart/GanttChart';
 import { getAlgorithmDefinition, getAlgorithmResult } from '../api';
 
 const AlgorithmPage = () => {
@@ -24,7 +19,6 @@ const AlgorithmPage = () => {
   const [result, setResult] = useState(null);
   const [prevAlgorithm, setPrevAlgorithm] = useState(null);
 
-  // Сбрасываем результаты при смене алгоритма
   useEffect(() => {
     if (algorithmName !== prevAlgorithm) {
       setResult(null);
@@ -64,6 +58,115 @@ const AlgorithmPage = () => {
     }
   };
 
+  // const renderResult = () => {
+  //   if (!result) return null;
+
+  //   // Безопасное преобразование schedule в массив
+  //   const scheduleArray = Array.isArray(result.schedule) 
+  //     ? result.schedule 
+  //     : (result.schedule ? [result.schedule] : []);
+
+  //   return (
+  //     <>
+  //       <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+  //         <Typography variant="h6" gutterBottom>
+  //           Основные результаты:
+  //         </Typography>
+          
+  //         <Box sx={{ mt: 2 }}>
+  //           {result.optimal_time && (
+  //             <Typography>
+  //               <strong>Оптимальное время:</strong> {result.optimal_time}
+  //             </Typography>
+  //           )}
+            
+  //           {scheduleArray.length > 0 && (
+  //             <Typography sx={{ mt: 1 }}>
+  //               <strong>Порядок работ:</strong> {scheduleArray.join(' → ')}
+  //             </Typography>
+  //           )}
+
+  //           {result.schedule_details && (
+  //             <Box sx={{ mt: 2, whiteSpace: 'pre-line' }}>
+  //               <Typography variant="subtitle2" gutterBottom>
+  //                 Детали расписания:
+  //               </Typography>
+  //               <Typography component="div" sx={{ 
+  //                 p: 1, 
+  //                 bgcolor: '#f5f5f5', 
+  //                 borderRadius: 1,
+  //                 fontFamily: 'monospace'
+  //               }}>
+  //                 {result.schedule_details}
+  //               </Typography>
+  //             </Box>
+  //           )}
+  //         </Box>
+  //       </Paper>
+
+  //       {result.gantt_data && <GanttChart data={result.gantt_data} />}
+  //     </>
+  //   );
+  // };
+  const renderResult = () => {
+  if (!result) return null;
+
+  // Безопасное преобразование schedule в массив
+  const scheduleArray = Array.isArray(result.schedule) 
+    ? result.schedule 
+    : (result.schedule ? [result.schedule] : []);
+
+  return (
+    <>
+      <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Основные результаты:
+        </Typography>
+        
+        <Box sx={{ mt: 2 }}>
+          {result.optimal_time && (
+            <Typography>
+              <strong>Оптимальное время:</strong> {result.optimal_time}
+            </Typography>
+          )}
+          
+          {scheduleArray.length > 0 && (
+            <Typography sx={{ mt: 1 }}>
+              <strong>Порядок работ:</strong> {scheduleArray.join(' → ')}
+            </Typography>
+          )}
+
+          {result.schedule_details && (
+            <Box sx={{ mt: 2, whiteSpace: 'pre-line' }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Детали расписания:
+              </Typography>
+              <Typography component="div" sx={{ 
+                p: 1, 
+                bgcolor: 'grey.100', 
+                borderRadius: 1,
+                fontFamily: 'monospace'
+              }}>
+                {result.schedule_details}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </Paper>
+
+      {result.gantt_data && (
+        <GanttChart 
+          data={{
+            ...result.gantt_data,
+            workers: result.gantt_data.workers || [],
+            timeScale: result.gantt_data.timeScale || []
+          }} 
+        />
+      )}
+    </>
+  );
+};
+
   if (loading && !definition) {
     return (
       <Box display="flex" justifyContent="center" p={3}>
@@ -87,26 +190,6 @@ const AlgorithmPage = () => {
       </Alert>
     );
   }
-
-  const renderResult = () => {
-    if (!result) return null;
-
-    return (
-      <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Результат выполнения:
-        </Typography>
-
-        {Object.entries(result).map(([key, value]) => (
-          <Box key={key} sx={{ mt: 1 }}>
-            <Typography>
-              <strong>{key}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}
-            </Typography>
-          </Box>
-        ))}
-      </Paper>
-    );
-  };
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const host = 'https://localhost:7292';
+export const host = 'https://localhost:7208';
 
 export const getAlgorithms = async () => {
   const response = await axios.get(`${host}/api/Algorithms`);

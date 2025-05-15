@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useField } from 'formik';
+import React, { useEffect, useMemo } from 'react';
+import { useField, useFormikContext } from 'formik';
 import {
   Box,
   Table,
@@ -13,24 +13,40 @@ import {
   Paper
 } from '@mui/material';
 
-const DynamicMatrixInput = ({ param, controllerValue }) => {
+const DynamicMatrixInput = ({ param }) => {
   const [field, , helpers] = useField(param.name);
+  const { values } = useFormikContext();
+
+  // Мемоизированная функция для получения размеров матрицы
+  const getDimensions = useMemo(() => {
+    return () => {
+      const getParamValue = (paramName) => {
+        if (typeof paramName === 'number') return paramName;
+        if (typeof paramName !== 'string') return 1;
+        
+        const value = values[paramName];
+        return typeof value === 'number' ? Math.max(1, value) : 1;
+      };
+
+      return {
+        rows: param.dimensions?.rows ? getParamValue(param.dimensions.rows) : 1,
+        cols: param.dimensions?.cols ? getParamValue(param.dimensions.cols) : 1
+      };
+    };
+  }, [param.dimensions?.rows, param.dimensions?.cols, values]);
 
   useEffect(() => {
-    if (controllerValue > 0) {
-      // Определяем количество столбцов
-      let cols;
-      if (typeof param.dimensions?.cols === 'number') {
-        cols = param.dimensions.cols;
-      } else if (param.dimensions?.cols === 'num_jobs') {
-        cols = controllerValue;
-      } else {
-        cols = param.name === 'job_times' ? 2 : controllerValue;
-      }
+    const { rows, cols } = getDimensions();
+    
+    // Проверяем, нужно ли обновлять матрицу
+    const current = field.value || [];
+    const needsUpdate = 
+      !current.length || 
+      current.length !== rows || 
+      (current[0] && current[0].length !== cols);
 
-      // Инициализируем или обновляем матрицу
-      const current = field.value || [];
-      const newMatrix = Array(controllerValue).fill().map((_, i) => 
+    if (rows > 0 && cols > 0 && needsUpdate) {
+      const newMatrix = Array(rows).fill().map((_, i) => 
         Array(cols).fill().map((_, j) => 
           (current[i] && current[i][j] !== undefined) ? current[i][j] : 0
         )
@@ -38,31 +54,35 @@ const DynamicMatrixInput = ({ param, controllerValue }) => {
       
       helpers.setValue(newMatrix);
     }
-  }, [controllerValue, param.name, param.dimensions?.cols]);
+  }, [getDimensions, field.value, helpers]);
 
-  if (!field.value || field.value.length === 0 || controllerValue === 0) return null;
+  if (!field.value || field.value.length === 0) return null;
 
   // Генерируем заголовки столбцов
-  const getColumnLabels = () => {
-    if (param.column_labels) return param.column_labels;
+  const columnLabels = param.column_labels || 
+    Array(field.value[0].length).fill().map((_, i) => `${i + 1}`);
+
+  // Оптимизированный обработчик изменений
+  const handleCellChange = (rowIndex, colIndex) => (e) => {
+    let value;
+    if (param.data_type === 'INT') {
+      value = parseInt(e.target.value) || 0;
+    } else if (param.data_type === 'FLOAT') {
+      value = parseFloat(e.target.value) || 0;
+    } else {
+      value = e.target.value;
+    }
     
     if (param.name === 'dependencies') {
-      return Array(field.value[0].length).fill().map((_, i) => `Зависит от ${i + 1}`);
+      value = value ? 1 : 0;
     }
     
-    if (param.name === 'job_times' && param.dimensions?.cols === 2) {
-      return ['Этап 1', 'Этап 2'];
-    }
+    const newMatrix = field.value.map((row, rIdx) => 
+      row.map((cell, cIdx) => 
+        rIdx === rowIndex && cIdx === colIndex ? value : cell
+      )
+    );
     
-    return Array(field.value[0].length).fill().map((_, i) => `Колонка ${i + 1}`);
-  };
-
-  const columnLabels = getColumnLabels();
-
-  // Обработчик изменения значения ячейки
-  const handleCellChange = (rowIndex, colIndex, value) => {
-    const newMatrix = field.value.map(row => [...row]);
-    newMatrix[rowIndex][colIndex] = value;
     helpers.setValue(newMatrix);
   };
 
@@ -81,7 +101,7 @@ const DynamicMatrixInput = ({ param, controllerValue }) => {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Работа</TableCell>
+              <TableCell>№</TableCell>
               {columnLabels.map((label, index) => (
                 <TableCell key={index} align="center">{label}</TableCell>
               ))}
@@ -90,28 +110,12 @@ const DynamicMatrixInput = ({ param, controllerValue }) => {
           <TableBody>
             {field.value.map((row, rowIndex) => (
               <TableRow key={rowIndex}>
-                <TableCell>Работа {rowIndex + 1}</TableCell>
+                <TableCell>{rowIndex + 1}</TableCell>
                 {row.map((cell, colIndex) => (
                   <TableCell key={colIndex} align="center">
                     <TextField
                       value={cell}
-                      onChange={(e) => {
-                        let value;
-                        if (param.data_type === 'INT') {
-                          value = parseInt(e.target.value) || 0;
-                        } else if (param.data_type === 'FLOAT') {
-                          value = parseFloat(e.target.value) || 0;
-                        } else {
-                          value = e.target.value;
-                        }
-                        
-                        // Для зависимостей ограничиваем 0 или 1
-                        if (param.name === 'dependencies') {
-                          value = value ? 1 : 0;
-                        }
-                        
-                        handleCellChange(rowIndex, colIndex, value);
-                      }}
+                      onChange={handleCellChange(rowIndex, colIndex)}
                       type={param.data_type === 'STRING' ? 'text' : 'number'}
                       inputProps={{ 
                         min: param.name === 'dependencies' ? 0 : undefined,
@@ -131,4 +135,4 @@ const DynamicMatrixInput = ({ param, controllerValue }) => {
   );
 };
 
-export default DynamicMatrixInput;
+export default React.memo(DynamicMatrixInput);
