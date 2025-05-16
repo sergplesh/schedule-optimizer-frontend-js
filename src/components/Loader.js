@@ -22,3 +22,4 @@ const Loader = ({ fullScreen = false }) => {
 };
 
 export default Loader;
+

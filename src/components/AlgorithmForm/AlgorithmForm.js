@@ -54,10 +54,6 @@ const AlgorithmForm = ({ parameters = [], onSubmit, loading, algorithmName }) =>
           errors[param.name] = 'Введите число';
         }
       }
-      
-      if (param.matrix_controller && (values[param.name] < 1 || values[param.name] > 20)) {
-        errors[param.name] = 'Количество работ должно быть от 1 до 20';
-      }
     });
     
     return errors;
@@ -160,3 +156,4 @@ const AlgorithmForm = ({ parameters = [], onSubmit, loading, algorithmName }) =>
 };
 
 export default AlgorithmForm;
+

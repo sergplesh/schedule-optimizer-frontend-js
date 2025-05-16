@@ -9,7 +9,8 @@ import {
   IconButton,
   Divider,
   CircularProgress,
-  Alert
+  Alert,
+  ListItemIcon
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { getAlgorithms } from '../../api';
@@ -109,16 +110,57 @@ const Sidebar = () => {
         </IconButton>
       </Box>
       <Divider />
+      
+      {/* Кнопка "Главная" с выделением */}
+      <ListItem 
+        disablePadding
+        sx={{
+          backgroundColor: 'primary.main',
+          '&:hover': {
+            backgroundColor: 'primary.main',
+          }
+        }}
+      >
+        <ListItemButton 
+          component={Link} 
+          to="/"
+          sx={{
+            '&:hover': {
+              color: 'common.white',
+            }
+          }}
+        >
+          <ListItemIcon sx={{ color: 'inherit' }}>
+          </ListItemIcon>
+          <ListItemText 
+            primary="Главная" 
+            primaryTypographyProps={{ 
+              fontWeight: 'bold',
+              color: 'common.white'
+            }} 
+          />
+        </ListItemButton>
+      </ListItem>
+      
+      <Divider sx={{ my: 1 }} />
+      
+      {/* Список алгоритмов */}
       <List>
-        <ListItem disablePadding>
-          <ListItemButton component={Link} to="/">
-            <ListItemText primary="Главная" />
-          </ListItemButton>
-        </ListItem>
         {algorithms.map((algorithm) => (
           <ListItem key={algorithm.name} disablePadding>
-            <ListItemButton component={Link} to={`/algorithm/${algorithm.name}`}>
-              <ListItemText primary={algorithm.title} />
+            <ListItemButton 
+              component={Link} 
+              to={`/algorithm/${algorithm.name}`}
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'action.hover',
+                }
+              }}
+            >
+              <ListItemText 
+                primary={algorithm.title} 
+                primaryTypographyProps={{ fontSize: '0.9rem' }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
