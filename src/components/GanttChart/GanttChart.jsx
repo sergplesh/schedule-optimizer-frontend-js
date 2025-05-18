@@ -32,7 +32,7 @@ const GanttChart = ({ data }) => {
       theme.palette.info.main,
       theme.palette.success.main
     ];
-    return colors[(jobId + stageNum) % colors.length];
+    return colors[(jobId) % colors.length];
   };
 
   return (
