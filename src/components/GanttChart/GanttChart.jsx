@@ -23,7 +23,7 @@ const GanttChart = ({ data }) => {
   }
 
   // Функция для генерации цвета на основе ID
-  const getStageColor = (jobId, stageNum) => {
+  const getStageColor = (jobId) => {
     const colors = [
       theme.palette.primary.main,
       theme.palette.secondary.main,
@@ -97,7 +97,7 @@ const GanttChart = ({ data }) => {
                     left: `${left}%`,
                     width: `${width}%`,
                     height: '40px',
-                    bgcolor: getStageColor(stage.jobId, stage.stageNum),
+                    bgcolor: getStageColor(stage.jobId),
                     borderRadius: '4px',
                     top: '10px',
                     display: 'flex',

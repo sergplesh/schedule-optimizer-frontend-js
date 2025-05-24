@@ -111,7 +111,6 @@ const Sidebar = () => {
       </Box>
       <Divider />
       
-      {/* Кнопка "Главная" с выделением */}
       <ListItem 
         disablePadding
         sx={{
@@ -144,7 +143,6 @@ const Sidebar = () => {
       
       <Divider sx={{ my: 1 }} />
       
-      {/* Список алгоритмов */}
       <List>
         {algorithms.map((algorithm) => (
           <ListItem key={algorithm.name} disablePadding>

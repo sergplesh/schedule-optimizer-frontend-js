@@ -17,7 +17,6 @@ const DynamicMatrixInput = ({ param }) => {
   const [field, , helpers] = useField(param.name);
   const { values } = useFormikContext();
 
-  // Мемоизированная функция для получения размеров матрицы
   const getDimensions = useMemo(() => {
     return () => {
       const getParamValue = (paramName) => {
@@ -38,7 +37,6 @@ const DynamicMatrixInput = ({ param }) => {
   useEffect(() => {
     const { rows, cols } = getDimensions();
     
-    // Проверяем, нужно ли обновлять матрицу
     const current = field.value || [];
     const needsUpdate = 
       !current.length || 
@@ -58,23 +56,20 @@ const DynamicMatrixInput = ({ param }) => {
 
   if (!field.value || field.value.length === 0) return null;
 
-  // Генерируем заголовки столбцов
   const columnLabels = param.column_labels || 
     Array(field.value[0].length).fill().map((_, i) => `${i + 1}`);
 
-  // Оптимизированный обработчик изменений
   const handleCellChange = (rowIndex, colIndex) => (e) => {
     let value;
     if (param.data_type === 'INT') {
       value = parseInt(e.target.value) || 0;
     } else if (param.data_type === 'FLOAT') {
       value = parseFloat(e.target.value) || 0;
+    } else if (param.data_type === 'BOOL') {
+      // Для BOOL принимаем 0/1 и конвертируем в boolean
+      value = e.target.value === '1';
     } else {
       value = e.target.value;
-    }
-    
-    if (param.name === 'dependencies') {
-      value = value ? 1 : 0;
     }
     
     const newMatrix = field.value.map((row, rIdx) => 
@@ -114,12 +109,13 @@ const DynamicMatrixInput = ({ param }) => {
                 {row.map((cell, colIndex) => (
                   <TableCell key={colIndex} align="center">
                     <TextField
-                      value={cell}
+                      value={param.data_type === 'BOOL' ? (cell ? 1 : 0) : cell}
                       onChange={handleCellChange(rowIndex, colIndex)}
-                      type={param.data_type === 'STRING' ? 'text' : 'number'}
+                      type="number"
                       inputProps={{ 
-                        min: param.name === 'dependencies' ? 0 : undefined,
-                        max: param.name === 'dependencies' ? 1 : undefined,
+                        min: param.data_type === 'BOOL' ? 0 : 
+                             (param.data_type === 'INT' || param.data_type === 'FLOAT' ? 0 : undefined),
+                        max: param.data_type === 'BOOL' ? 1 : undefined,
                         step: param.data_type === 'FLOAT' ? '0.1' : '1'
                       }}
                       sx={{ width: '80px' }}
